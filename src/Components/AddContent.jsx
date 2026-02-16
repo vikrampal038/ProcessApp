@@ -4,34 +4,49 @@ export default function AddContent({ onAdd }) {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleFile = (e) => {
     const f = e.target.files[0];
     if (!f) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFile({
-        name: f.name,
-        data: reader.result,
-      });
-    };
-    reader.readAsDataURL(f);
+    setFile(f); // ✅ raw File object
   };
 
-  const submit = () => {
-    if (!title) return alert("Title likho");
+  const submit = async () => {
+    if (!title.trim()) return alert("Title likho");
 
-    onAdd({
-      id: Date.now(),
-      title,
-      description: desc,
-      file,
-    });
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", desc);
+    if (file) formData.append("file", file);
 
-    setTitle("");
-    setDesc("");
-    setFile(null);
+    try {
+      setLoading(true);
+
+      // 👉 Future backend API call
+      // const res = await fetch("http://localhost:4000/api/content", {
+      //   method: "POST",
+      //   body: formData,
+      // });
+      // const data = await res.json();
+
+      // 👉 Abhi ke liye mock callback
+      onAdd({
+        id: Date.now(),
+        title,
+        description: desc,
+        file: file ? { name: file.name } : null,
+      });
+
+      setTitle("");
+      setDesc("");
+      setFile(null);
+    } catch (err) {
+      alert("Upload failed");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,7 +62,7 @@ export default function AddContent({ onAdd }) {
             Title
           </label>
           <input
-            className="border py-2 px-3 rounded-md text-sm sm:text-base md:text-lg tracking-wide leading-6 placeholder:text-xs sm:placeholder:text-sm placeholder:font-medium w-full outline-none focus:border-2 focus:border-blue-500"
+            className="border py-2 px-3 rounded-md w-full outline-none focus:border-2 focus:border-blue-500"
             placeholder="Your Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -61,7 +76,7 @@ export default function AddContent({ onAdd }) {
           </label>
           <textarea
             rows={4}
-            className="border py-2 px-3 rounded-md text-sm sm:text-base md:text-md tracking-wide leading-7 placeholder:text-xs sm:placeholder:text-sm placeholder:font-medium w-full outline-none focus:border-2 focus:border-blue-500 resize-none"
+            className="border py-2 px-3 rounded-md w-full outline-none focus:border-2 focus:border-blue-500 resize-none"
             placeholder="Write Your Description"
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
@@ -74,17 +89,24 @@ export default function AddContent({ onAdd }) {
             Upload File
           </label>
           <input
-            className="border py-2 px-3 rounded-md text-sm sm:text-base md:text-lg tracking-wide leading-6 w-full outline-none focus:border-2 focus:border-blue-500"
+            className="border py-2 px-3 rounded-md w-full outline-none focus:border-2 focus:border-blue-500"
             type="file"
             onChange={handleFile}
           />
+
+          {file && (
+            <p className="text-xs text-gray-500 mt-1">
+              Selected: {file.name}
+            </p>
+          )}
         </div>
 
         <button
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold tracking-widest border py-2 px-6 rounded-md text-sm sm:text-base md:text-lg w-full sm:w-auto transition-all duration-300"
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold tracking-widest border py-2 px-6 rounded-md w-full sm:w-auto transition-all duration-300 disabled:opacity-60"
           onClick={submit}
+          disabled={loading}
         >
-          Save
+          {loading ? "Saving..." : "Save"}
         </button>
       </div>
     </div>

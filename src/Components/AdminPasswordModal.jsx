@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { verifyDeletePassword } from "../services/authService";
 
 export default function AdminPasswordModal({ onClose, onConfirm }) {
   const [password, setPassword] = useState("");
@@ -13,20 +14,21 @@ export default function AdminPasswordModal({ onClose, onConfirm }) {
   }, []);
 
   const handleSubmit = (e) => {
-    e.preventDefault(); // ✅ form submit default rokho
+    e.preventDefault();
 
     if (!password.trim()) {
       setError("Password required");
       return;
     }
 
+    // 👇 Parent component handle karega verification (abhi mock, future API)
     onConfirm(password, setError);
   };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-50 px-3 sm:px-4">
       <form
-        onSubmit={handleSubmit} // ✅ wrap in form
+        onSubmit={handleSubmit}
         className="bg-white p-4 sm:p-5 md:p-6 rounded-xl shadow-2xl w-full max-w-sm sm:max-w-md"
       >
         <h3 className="font-bold text-base sm:text-lg md:text-xl">
@@ -46,10 +48,11 @@ export default function AdminPasswordModal({ onClose, onConfirm }) {
             readOnly
             className="hidden"
           />
+
           <input
             autoFocus
             type={showPass ? "text" : "password"}
-            autoComplete="current-password" // ✅ add this
+            autoComplete="current-password"
             className="border w-full p-2 sm:p-2.5 rounded-md mt-3 text-sm sm:text-base outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400"
             placeholder="Enter delete password"
             value={password}
@@ -82,7 +85,7 @@ export default function AdminPasswordModal({ onClose, onConfirm }) {
           </button>
 
           <button
-            type="submit" // ✅ submit button
+            type="submit"
             className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-sm"
           >
             Verify & Delete

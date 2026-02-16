@@ -6,12 +6,13 @@ import {
 } from "react-icons/md";
 import InlineModal from "./InlineModal";
 import AdminPasswordModal from "./AdminPasswordModal";
-import { verifyDeletePassword } from "../utils/loginAuth"; // ✅ correct import
+import { verifyDeletePassword } from "../services/authService";
 
 export default function ContentAccordion({ contents, onDelete }) {
   const [openId, setOpenId] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [askPassword, setAskPassword] = useState(false);
+  const [loading, setLoading] = useState(false); // ✅ new
 
   if (!contents.length)
     return (
@@ -59,17 +60,13 @@ export default function ContentAccordion({ contents, onDelete }) {
 
           {openId === c.id && (
             <div className="p-2 sm:p-3 md:p-4 flex flex-col justify-center items-start gap-4 sm:gap-5 w-full">
-              {/* Description as bullet points */}
               <div className="text-white w-full text-sm sm:text-base leading-relaxed">
                 <ul className="list-disc pl-5 sm:pl-6 space-y-1.5 sm:space-y-2">
                   {c.description
                     ?.split("\n")
                     .filter((line) => line.trim() !== "")
                     .map((line, index) => (
-                      <li
-                        key={index}
-                        className="leading-6 sm:leading-7 break-words"
-                      >
+                      <li key={index} className="leading-6 sm:leading-7 break-words">
                         {line}
                       </li>
                     ))}
@@ -97,7 +94,7 @@ export default function ContentAccordion({ contents, onDelete }) {
         </div>
       ))}
 
-      {/* Step 1: Confirm delete */}
+      {/* Step 1 */}
       {deleteId && !askPassword && (
         <InlineModal
           title="⚠️ Permanently delete this content?"
@@ -110,32 +107,45 @@ export default function ContentAccordion({ contents, onDelete }) {
         />
       )}
 
-      {/* Step 2: Ask delete password */}
+      {/* Step 2 */}
       {askPassword && (
         <AdminPasswordModal
+          loading={loading}   // ✅ pass loading
           onClose={() => {
             setAskPassword(false);
             setDeleteId(null);
           }}
-          onConfirm={(password, setError) => {
-            const user = JSON.parse(localStorage.getItem("user")); // { email, name }
+          onConfirm={async (password, setError) => {
+            try {
+              const user = JSON.parse(localStorage.getItem("user"));
 
-            if (!user?.email) {
-              setError("User not logged in");
-              return;
+              if (!user?.email) {
+                setError("User not logged in");
+                return;
+              }
+
+              setLoading(true);
+
+              const res = await verifyDeletePassword({
+                email: user.email,
+                password,
+              }); // ✅ API call
+
+              if (!res?.success) {
+                setError(res?.message || "Incorrect password");
+                setLoading(false);
+                return;
+              }
+
+              setError("");
+              onDelete(deleteId);     // yahan baad me API call aayega
+              setAskPassword(false);
+              setDeleteId(null);
+            } catch (err) {
+              setError("Server error, try again");
+            } finally {
+              setLoading(false);
             }
-
-            const ok = verifyDeletePassword(user.email, password);
-
-            if (!ok) {
-              setError("Incorrect password");
-              return;
-            }
-
-            setError("");
-            onDelete(deleteId);
-            setAskPassword(false);
-            setDeleteId(null);
           }}
         />
       )}

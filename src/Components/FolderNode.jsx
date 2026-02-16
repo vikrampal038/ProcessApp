@@ -9,7 +9,7 @@ import { MdDelete } from "react-icons/md";
 
 import InlineModal from "./InlineModal";
 import AdminPasswordModal from "./AdminPasswordModal";
-import { verifyDeletePassword } from "../utils/loginAuth"; // ✅ correct
+import { verifyDeletePassword } from "../services/authService"; // ✅ correct
 
 export default function FolderNode({
   folder,
