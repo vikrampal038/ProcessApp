@@ -5,7 +5,7 @@ import { MdDelete } from "react-icons/md";
 import { FiLogOut } from "react-icons/fi";
 import InlineModal from "./InlineModal";
 import LogoutPasswordModal from "./LogoutPasswordModal";
-import { verifyLogin } from "../services/authService";
+import { verifyDeletePassword } from "../services/authService";
 
 export default function FolderTree({
   data = [],
@@ -36,41 +36,38 @@ export default function FolderTree({
   return (
     <>
       <div className="h-full flex flex-col">
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-10 bg-[#0F1A18] py-3 sm:py-4 px-3 sm:px-4 border-b border-white/10">
-          <div className="flex  justify-between items-center gap-2">
-            <div className="flex justify-start items-center gap-2">
-              <img src='/public/process.svg' alt="site log" className="w-5" />              
-              <h3 className="text-white font-bold tracking-widest text-sm sm:text-lg font-sans">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-[#0F1A18] py-3 px-4 border-b border-white/10">
+          <div className="flex justify-between items-center gap-2">
+            <div className="flex items-center gap-2">
+              <img src="/process.svg" alt="site logo" className="w-5" />
+              <h3 className="text-white font-bold tracking-widest text-sm sm:text-lg">
                 ProcessApp
               </h3>
             </div>
 
             <button
               onClick={() => setShowInput((p) => !p)}
-              className="text-white flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm md:text-base hover:text-[#2BD4BD] transition"
+              className="text-white flex items-center gap-2 hover:text-[#2BD4BD]"
             >
-              <FaPlus className="text-sm sm:text-base" />
+              <FaPlus />
               <span className="hidden sm:inline">New Folder</span>
             </button>
           </div>
 
           {showInput && (
-            <div className="mt-2 flex flex-col sm:flex-row gap-2 justify-between items-stretch sm:items-center border border-white/20 rounded-md p-1">
+            <div className="mt-2 flex gap-2 border border-white/20 rounded-md p-1">
               <input
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addRootFolder()}
                 placeholder="Folder Name"
-                className="py-1 px-2 rounded-md text-xs sm:text-sm w-full outline-0 text-white bg-transparent"
+                className="py-1 px-2 rounded-md w-full outline-0 text-white bg-transparent"
               />
 
-              <div className="flex justify-end sm:justify-center items-center gap-3 bg-white p-1.5 rounded-md sm:rounded-r-sm">
-                <button
-                  onClick={addRootFolder}
-                  className="hover:text-green-400 text-base sm:text-lg"
-                >
+              <div className="flex gap-3 bg-white p-1.5 rounded-md">
+                <button onClick={addRootFolder} className="hover:text-green-400">
                   <FaPlus />
                 </button>
                 <button
@@ -78,7 +75,7 @@ export default function FolderTree({
                     setShowInput(false);
                     setName("");
                   }}
-                  className="hover:text-red-400 text-base sm:text-lg"
+                  className="hover:text-red-400"
                 >
                   <MdDelete />
                 </button>
@@ -88,7 +85,7 @@ export default function FolderTree({
         </div>
 
         {/* Folder List */}
-        <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-2 sm:py-3 space-y-1.5 sm:space-y-2">
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
           {data.map((folder) => (
             <FolderNode
               key={folder.id}
@@ -100,7 +97,7 @@ export default function FolderTree({
           ))}
         </div>
 
-        {/* Bottom User Profile */}
+        {/* User */}
         <div className="border-t border-white/10 p-3 flex items-center justify-between bg-[#0F1A18]">
           <div className="flex items-center gap-2">
             <FaUserCircle className="text-xl text-white" />
@@ -111,7 +108,7 @@ export default function FolderTree({
 
           <button
             onClick={() => setConfirmLogout(true)}
-            className="text-red-400 hover:text-red-500 transition"
+            className="text-red-400 hover:text-red-500"
             title="Logout"
           >
             <FiLogOut />
@@ -119,6 +116,7 @@ export default function FolderTree({
         </div>
       </div>
 
+      {/* Confirm Logout */}
       {confirmLogout && !askLogoutPassword && (
         <InlineModal
           title="⚠️ Are you sure you want to logout?"
@@ -131,13 +129,14 @@ export default function FolderTree({
         />
       )}
 
+      {/* Ask Password */}
       {askLogoutPassword && (
         <LogoutPasswordModal
           onClose={() => {
             setAskLogoutPassword(false);
             setConfirmLogout(false);
           }}
-          onConfirm={(password, setError) => {
+          onConfirm={async (password, setError) => {
             const user = JSON.parse(localStorage.getItem("user"));
 
             if (!user?.email) {
@@ -145,15 +144,23 @@ export default function FolderTree({
               return;
             }
 
-            const ok = verifyLogin(user.email, password);
+            try {
+              const res = await verifyDeletePassword({
+                email: user.email,
+                password,
+              });
 
-            if (!ok) {
-              setError("Incorrect login password");
-              return;
+              if (!res?.success) {
+                setError("Incorrect login password");
+                return;
+              }
+
+              setError("");
+              onLogout();
+            } catch (err) {
+              console.error(err);
+              setError("Server error, try again");
             }
-
-            setError("");
-            onLogout();
           }}
         />
       )}

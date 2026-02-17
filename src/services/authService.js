@@ -1,39 +1,24 @@
-// 👉 Ye abhi mock service hai
-// 👉 Backend banne ke baad yahan API call lagegi
-
 import axios from "axios";
 
-const USERS = [
-  {
-    email: "vikrampal038@gmail.com",
-    name: "Vikram Pal",
-    password: "vikram@123",
-    deletePassword: "delete@123",
-  },
-  {
-    email: "singhnikhil100@gmail.com",
-    name: "Nikhil Singh",
-    password: "nikhil@123",
-    deletePassword: "delete@123",
-  },
-];
+const API = "http://localhost:5000/api/auth";
 
-export function verifyLogin(email, password) {
-  const user = USERS.find((u) => u.email === email);
-  if (!user) return null;
-
-  if (user.password !== password) return null;
-
-  return {
-    email: user.email,
-    name: user.name,
-  };
+export async function registerUser(data) {
+  const res = await axios.post(`${API}/register`, data);
+  return res.data;
 }
 
-export const verifyDeletePassword = async ({ email, password }) => {
-  const res = await axios.post("http://localhost:5000/api/auth/verify-delete-password", {
-    email,
-    password,
-  });
+export async function loginUser(data) {
+  const res = await axios.post(`${API}/login`, data);
   return res.data;
-};
+}
+
+// ✅ Add this function (used in LoginModal + FolderTree logout verify)
+export async function verifyLogin(email, password) {
+  const res = await axios.post(`${API}/login`, { email, password });
+  return res.data; // { success, user, token } expected
+}
+
+export async function verifyDeletePassword(data) {
+  const res = await axios.post(`${API}/verify-delete-password`, data);
+  return res.data; // { success: true/false }
+}
