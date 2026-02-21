@@ -14,6 +14,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  deletePassword: {
+    type: String,
+    required: true, // ✅ must exist
+  },
 });
 
 export default mongoose.model("User", userSchema);

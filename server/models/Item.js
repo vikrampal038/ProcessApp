@@ -2,25 +2,29 @@ import mongoose from "mongoose";
 
 const itemSchema = new mongoose.Schema(
   {
-    title: {
+    name: {
       type: String,
       required: true,
-    },
-    content: {
-      type: String,
+      trim: true,
+      minlength: 1,
+      maxlength: 150,
     },
     folder: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Folder",
       required: true,
+      index: true,
     },
-    owner: {   // 🔥 yahan user → owner karo
+    owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
   },
   { timestamps: true }
 );
+
+itemSchema.index({ folder: 1, owner: 1, createdAt: -1 });
 
 export default mongoose.model("Item", itemSchema);

@@ -2,31 +2,22 @@ import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+
+
 export const register = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+  const { name, email, password, deletePassword } = req.body;
 
-    const existing = await User.findOne({ email });
-    if (existing) {
-      return res.status(400).json({ message: "User already exists" });
-    }
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedDeletePassword = await bcrypt.hash(deletePassword, 10);
 
-    const hashed = await bcrypt.hash(password, 10);
+  const user = await User.create({
+    name,
+    email,
+    password: hashedPassword,
+    deletePassword: hashedDeletePassword, // ✅ must save
+  });
 
-    const user = await User.create({
-      name,
-      email,
-      password: hashed,
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      user: { id: user._id, name: user.name, email: user.email },
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  res.status(201).json({ success: true });
 };
 
 export const login = async (req, res) => {
@@ -61,4 +52,3 @@ export const login = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
