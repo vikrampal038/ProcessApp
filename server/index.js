@@ -31,6 +31,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "20mb" }));
+app.get("/", (_req, res) => {
+  res.send("ProcessApp backend is running 🚀");
+});
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({ ok: true, service: "processapp-server" });
