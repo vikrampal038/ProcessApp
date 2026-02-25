@@ -12,7 +12,7 @@
    - `MONGODB_URI`
    - `JWT_SECRET`
    - `ALLOWED_ORIGINS` = `https://intelligc.org,https://www.intelligc.org`
-5. Deploy and copy the Render URL (example: `https://processapp-api.onrender.com`).
+5. Deploy and copy the Render URL (example: `https://processapp-backend.onrender.com`).
 6. Verify backend:
    - `GET https://<render-url>/api/health`
    - Expected: `{ "ok": true, "service": "processapp-server" }`
@@ -21,7 +21,7 @@
 
 1. In `client`, create `.env` from `.env.example`.
 2. Set:
-   - `VITE_API_BASE_URL=https://<render-url>/api`
+   - `VITE_API_BASE_URL=https://processapp-backend.onrender.com/api`
 3. Build frontend:
    - `cd client`
    - `npm run build`
