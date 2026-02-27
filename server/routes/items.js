@@ -7,6 +7,9 @@ import auth from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
+const escapeRegex = (value = "") =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 // CREATE ITEM
 router.post("/create", auth, async (req, res) => {
   try {
@@ -45,6 +48,27 @@ router.get("/folder/:folderId", auth, async (req, res) => {
       owner: req.user.id,
     }).sort({ createdAt: -1 });
 
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET ALL ITEMS (OPTIONAL GLOBAL SEARCH BY NAME/DESCRIPTION)
+router.get("/", auth, async (req, res) => {
+  try {
+    const q = String(req.query.q || "").trim();
+    const query = { owner: req.user.id };
+
+    if (q) {
+      const safeQuery = escapeRegex(q);
+      query.$or = [
+        { name: { $regex: safeQuery, $options: "i" } },
+        { description: { $regex: safeQuery, $options: "i" } },
+      ];
+    }
+
+    const items = await Item.find(query).sort({ createdAt: -1 });
     res.json(items);
   } catch (err) {
     res.status(500).json({ message: err.message });
